@@ -3,7 +3,13 @@
 ################################################################################
 
 /herental/bin
-/herental.Tests/obj/Debug
+/herental/obj
+/herental.Tests/obj
 /packages
 /.vs/herental/v14
 /.vs/config
+/herental.backend/bin
+/herental.backend/obj
+/herental.Tests/bin/Debug
+/*.pdf
+/*.docx
