@@ -1,18 +1,20 @@
 ﻿################################################################################
 # This .gitignore file was automatically created by Microsoft(R) Visual Studio.
 ################################################################################
-
+/.vs/herental/v14
+/.vs/config
+/*.pdf
+/*.docx
 /herental/bin
 /herental/obj
 /herental.Tests/obj
-/packages
-/.vs/herental/v14
-/.vs/config
 /herental.backend/bin
 /herental.backend/obj
 /herental.Tests/bin
-/*.pdf
-/*.docx
 /herental.backend.Tests/obj
 /herental.backend.Tests/bin
-/*.csproj.user
+/herental.BL/obj
+/herental.BL/bin
+/packages
+*.user
+*.csproj.user
