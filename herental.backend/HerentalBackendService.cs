@@ -17,10 +17,10 @@ namespace herental.backend
 {
     public partial class HerentalBackendService : ServiceBase
     {
-        protected Thread _mainLoopThread;
-        private readonly ILog log = LogManager.GetLogger(typeof(HerentalBackendService));
+        protected Thread MainThread;
+        private readonly ILog Log = LogManager.GetLogger(typeof(HerentalBackendService));
 
-        private bool _continue = true;
+        AutoResetEvent StopRequest = new AutoResetEvent(false);
 
         public HerentalBackendService()
         {
@@ -35,51 +35,48 @@ namespace herental.backend
             this.CanShutdown = true;
             this.CanStop = true;
 
-            _mainLoopThread = new Thread(MainLoop);
+            MainThread = new Thread(MainLoop);
         }
 
         protected override void OnStart(string[] args)
         {
             base.OnStart(args);
-            _mainLoopThread.Start();
+            MainThread.Start();
         }
 
         protected override void OnStop()
         {
-            _continue = false;
-            _mainLoopThread.Join();
+            StopRequest.Set();
+            MainThread.Join();
             base.OnStop();
         }
 
         protected void MainLoop()
         {
-            while (_continue)
+            // TODO: receive events from the MQ, act upon the messages
+            // TODO: get the hostname from configuration file
+            var cf = new ConnectionFactory() { HostName = "localhost" };
+
+            // set the heartbeat timeout to 60 seconds
+            // TODO: config
+            cf.RequestedHeartbeat = 60;
+
+            // TODO: implement a single-queue RPC server
+            using (var connection = cf.CreateConnection())
+            using (var channel = connection.CreateModel())
             {
-                try
-                {
-                    // TODO: receive events from the MQ, act upon the messages
-                    // TODO: get the hostname from configuration file
-                    var factory = new ConnectionFactory() { HostName = "localhost"  };
-                    using (var connection = factory.CreateConnection())
-                    using (var channel = connection.CreateModel())
-                    {
-                        channel.QueueDeclare(queue: "herental.backend",
-                                            durable: false,
-                                            exclusive: false,
-                                            autoDelete: false,
-                                            arguments: null);
+                channel.QueueDeclare(queue: "herental.backend",
+                                    durable: false,
+                                    exclusive: false,
+                                    autoDelete: false,
+                                    arguments: null);
 
-                        var consumer = new EventingBasicConsumer(channel);
-                        consumer.Received += Consumer_Received;
-                    }
-                }
-                catch (System.TimeoutException)
-                {
+                var consumer = new EventingBasicConsumer(channel);
+                consumer.Received += Consumer_Received;
 
-                }
-                catch (Exception e)
+                for (;;)
                 {
-                    log.Error(e);
+                    if (StopRequest.WaitOne(100)) return;
                 }
             }
         }
@@ -88,7 +85,8 @@ namespace herental.backend
         {
             var body = ea.Body;
             var message = Encoding.UTF8.GetString(body);
-            log.InfoFormat("Received a message: '{0}'", message);
+            Log.InfoFormat("Received a message: '{0}'", message);
+            // TODO: handle the message according to its logic
         }
     }
 }

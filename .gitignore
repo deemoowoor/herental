@@ -10,6 +10,7 @@
 /.vs/config
 /herental.backend/bin
 /herental.backend/obj
-/herental.Tests/bin/Debug
+/herental.Tests/bin
 /*.pdf
 /*.docx
+/herental.backend.Tests/obj
