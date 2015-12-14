@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
+﻿using System.Web.Mvc;
 using SimpleInjector;
+using SimpleInjector.Integration.Web.Mvc;
 
 namespace herental.App_Start
 {
@@ -11,6 +9,13 @@ namespace herental.App_Start
         public static void Setup()
         {
             var container = new Container();
+
+            // TODO: register all interfaces here
+            //container.Register<>();
+
+            container.Verify();
+
+            DependencyResolver.SetResolver(new SimpleInjectorDependencyResolver(container));
         }
     }
 }

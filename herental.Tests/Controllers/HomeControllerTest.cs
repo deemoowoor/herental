@@ -35,7 +35,7 @@ namespace herental.Tests.Controllers
             ViewResult result = controller.About() as ViewResult;
 
             // Assert
-            Assert.AreEqual("Your application description page.", result.ViewBag.Message);
+            Assert.AreEqual("A study project to implement a system with ASP.NET MVC 5, with separate web frontend and backend servers and connected via AMQP (RabbitMQ)", result.ViewBag.Message);
         }
 
         [TestMethod]

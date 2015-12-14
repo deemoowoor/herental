@@ -14,3 +14,5 @@
 /*.pdf
 /*.docx
 /herental.backend.Tests/obj
+/herental.backend.Tests/bin
+/*.csproj.user

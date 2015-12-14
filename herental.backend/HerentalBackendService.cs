@@ -11,6 +11,7 @@ using log4net;
 using System.Threading;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using System.IO;
 
 [assembly: log4net.Config.XmlConfigurator(Watch = true)]
 namespace herental.backend
@@ -47,7 +48,7 @@ namespace herental.backend
         protected override void OnStop()
         {
             StopRequest.Set();
-            MainThread.Join();
+            MainThread.Join(3000);
             base.OnStop();
         }
 
@@ -56,7 +57,7 @@ namespace herental.backend
             // TODO: receive events from the MQ, act upon the messages
             // TODO: get the hostname from configuration file
             var cf = new ConnectionFactory() { HostName = "localhost" };
-
+            
             // set the heartbeat timeout to 60 seconds
             // TODO: config
             cf.RequestedHeartbeat = 60;
@@ -65,28 +66,62 @@ namespace herental.backend
             using (var connection = cf.CreateConnection())
             using (var channel = connection.CreateModel())
             {
-                channel.QueueDeclare(queue: "herental.backend",
-                                    durable: false,
-                                    exclusive: false,
-                                    autoDelete: false,
-                                    arguments: null);
-
-                var consumer = new EventingBasicConsumer(channel);
-                consumer.Received += Consumer_Received;
+                
+                channel.QueueDeclare(queue: "rpc_queue",
+                                 durable: false,
+                                 exclusive: false,
+                                 autoDelete: false,
+                                 arguments: null);
+                channel.BasicQos(0, 1, false);
+                var consumer = new QueueingBasicConsumer(channel);
+                channel.BasicConsume(queue: "rpc_queue",
+                                     noAck: false,
+                                     consumer: consumer);
 
                 for (;;)
                 {
-                    if (StopRequest.WaitOne(100)) return;
+                    string response = null;
+                    try {
+                        var ea = consumer.Queue.Dequeue();
+                        var body = ea.Body;
+                        var props = ea.BasicProperties;
+                        var replyProps = channel.CreateBasicProperties();
+                        replyProps.CorrelationId = props.CorrelationId;
+
+                        try
+                        {
+                            var message = Encoding.UTF8.GetString(body);
+                            Log.InfoFormat("Recv: '{0}'", message);
+
+                            response = String.Format("{0} ack!", message);
+                        }
+                        catch (Exception e)
+                        {
+                            Log.Error(e.Message);
+                            response = "";
+                        }
+                        finally
+                        {
+                            var responseBytes = Encoding.UTF8.GetBytes(response);
+                            channel.BasicPublish(exchange: "",
+                                                 routingKey: props.ReplyTo,
+                                                 basicProperties: replyProps,
+                                                 body: responseBytes);
+                            channel.BasicAck(deliveryTag: ea.DeliveryTag,
+                                             multiple: false);
+                        }
+
+                    }
+                    catch (EndOfStreamException)
+                    {
+                        return;
+                    }
+
+                    if (StopRequest.WaitOne(100))
+                        return;
                 }
             }
         }
 
-        private void Consumer_Received(object sender, BasicDeliverEventArgs ea)
-        {
-            var body = ea.Body;
-            var message = Encoding.UTF8.GetString(body);
-            Log.InfoFormat("Received a message: '{0}'", message);
-            // TODO: handle the message according to its logic
-        }
     }
 }
