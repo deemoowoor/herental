@@ -1,16 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Diagnostics;
-using System.Linq;
 using System.ServiceProcess;
 using System.Text;
-using System.Threading.Tasks;
 using log4net;
 using System.Threading;
 using RabbitMQ.Client;
-using RabbitMQ.Client.Events;
 using System.IO;
 
 [assembly: log4net.Config.XmlConfigurator(Watch = true)]
