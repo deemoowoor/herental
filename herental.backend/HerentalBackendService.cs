@@ -1,10 +1,14 @@
-﻿using System;
+﻿using log4net;
+using RabbitMQ.Client;
+using System;
+using System.IO;
 using System.ServiceProcess;
 using System.Text;
-using log4net;
 using System.Threading;
-using RabbitMQ.Client;
-using System.IO;
+using SimpleInjector;
+using herental.BL.Interfaces;
+using Newtonsoft.Json;
+using log4net.Config;
 
 [assembly: log4net.Config.XmlConfigurator(Watch = true)]
 namespace herental.backend
@@ -15,6 +19,7 @@ namespace herental.backend
         private readonly ILog Log = LogManager.GetLogger(typeof(HerentalBackendService));
 
         AutoResetEvent StopRequest = new AutoResetEvent(false);
+        Container container;
 
         public HerentalBackendService()
         {
@@ -30,6 +35,8 @@ namespace herental.backend
             this.CanStop = true;
 
             MainThread = new Thread(MainLoop);
+
+            container = DependencyInjectorSetup.Setup();
         }
 
         protected override void OnStart(string[] args)
@@ -55,6 +62,8 @@ namespace herental.backend
             // TODO: config
             cf.RequestedHeartbeat = 60;
 
+            var dispatcher = container.GetInstance<IDispatcher>();
+
             // TODO: implement a single-queue RPC server
             using (var connection = cf.CreateConnection())
             using (var channel = connection.CreateModel())
@@ -73,47 +82,56 @@ namespace herental.backend
 
                 for (;;)
                 {
-                    string response = null;
-                    try {
-                        var ea = consumer.Queue.Dequeue();
-                        var body = ea.Body;
-                        var props = ea.BasicProperties;
-                        var replyProps = channel.CreateBasicProperties();
-                        replyProps.CorrelationId = props.CorrelationId;
-
-                        try
-                        {
-                            var message = Encoding.UTF8.GetString(body);
-                            Log.InfoFormat("Recv: '{0}'", message);
-
-                            response = String.Format("{0} ack!", message);
-                        }
-                        catch (Exception e)
-                        {
-                            Log.Error(e.Message);
-                            response = "";
-                        }
-                        finally
-                        {
-                            var responseBytes = Encoding.UTF8.GetBytes(response);
-                            channel.BasicPublish(exchange: "",
-                                                 routingKey: props.ReplyTo,
-                                                 basicProperties: replyProps,
-                                                 body: responseBytes);
-                            channel.BasicAck(deliveryTag: ea.DeliveryTag,
-                                             multiple: false);
-                        }
-
-                    }
-                    catch (EndOfStreamException)
-                    {
-                        return;
-                    }
+                    PollQueue(channel, consumer, dispatcher);
 
                     if (StopRequest.WaitOne(100))
                         return;
                 }
             }
+        }
+
+        protected void PollQueue(IModel channel, IQueueingBasicConsumer consumer, IDispatcher dispatcher)
+        {
+            string response = null;
+            try
+            {
+                var ea = consumer.Queue.Dequeue();
+                var body = ea.Body;
+                var props = ea.BasicProperties;
+                var replyProps = channel.CreateBasicProperties();
+                replyProps.CorrelationId = props.CorrelationId;
+
+                try
+                {
+                    var message = Encoding.UTF8.GetString(body);
+                    Log.InfoFormat("Recv: '{0}'", message);
+                    var rawcommand = JsonConvert.DeserializeObject<RawCommand>(message);
+                    var result = dispatcher.Invoke(rawcommand.MethodName, rawcommand.Arguments);
+                    Log.InfoFormat("Result: '{0}'", result);
+                    response = JsonConvert.SerializeObject(result); // TODO: wrap into a protocol object
+                }
+                catch (Exception e)
+                {
+                    Log.Error(e.Message);
+                    response = JsonConvert.SerializeObject(new { Error = e.Message}); // TODO: report an error
+                }
+                finally
+                {
+                    var responseBytes = Encoding.UTF8.GetBytes(response);
+                    channel.BasicPublish(exchange: "",
+                                         routingKey: props.ReplyTo,
+                                         basicProperties: replyProps,
+                                         body: responseBytes);
+                    channel.BasicAck(deliveryTag: ea.DeliveryTag,
+                                     multiple: false);
+                }
+
+            }
+            catch (EndOfStreamException)
+            {
+                return;
+            }
+
         }
 
     }

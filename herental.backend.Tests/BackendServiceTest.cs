@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.ServiceProcess;
 using Xunit;
 
@@ -41,9 +42,9 @@ namespace herental.backend.Tests
             
             try {
                 var rpcClient = new BasicRabbitMqClient(timeout);
-                var result = rpcClient.Call("30");
+                var result = rpcClient.Call(JsonConvert.SerializeObject(new { MethodName = "Test", Arguments = new object[1] }));
                 rpcClient.Close();
-                Assert.Equal("30 ack!", result);
+                Assert.Equal("ACK", JsonConvert.DeserializeObject(result));
             }
             finally
             {

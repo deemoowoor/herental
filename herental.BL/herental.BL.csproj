@@ -40,11 +40,19 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Commands\Test.cs" />
+    <Compile Include="Commands\TestResult.cs" />
+    <Compile Include="Interfaces\ICommandResult.cs" />
+    <Compile Include="Interfaces\IProduct.cs" />
+    <Compile Include="Commands\ListProductsArgument.cs" />
+    <Compile Include="Model\ProductType.cs" />
     <Compile Include="Dispatcher.cs" />
+    <Compile Include="Interfaces\ICommand.cs" />
+    <Compile Include="Interfaces\ICommandArgument.cs" />
+    <Compile Include="Interfaces\IDispatcher.cs" />
+    <Compile Include="Commands\ListProducts.cs" />
+    <Compile Include="Interfaces\IPagingInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Interfaces\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
