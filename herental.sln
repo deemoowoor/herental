@@ -19,7 +19,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "herental.backend.Tests", "h
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "herental.BL", "herental.BL\herental.BL.csproj", "{05F133E0-61B4-4EB0-A2A1-AA5FE895A049}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "henental.BL.Tests", "henental.BL.Tests\henental.BL.Tests.csproj", "{C3BE1BF8-4D77-4DC6-9C18-1B91CE969B5E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "herental.BL.Tests", "henental.BL.Tests\herental.BL.Tests.csproj", "{C3BE1BF8-4D77-4DC6-9C18-1B91CE969B5E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

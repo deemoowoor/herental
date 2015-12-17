@@ -1,8 +1,7 @@
-﻿using herental.BL.Commands;
-using System;
-using System.Collections.Generic;
+﻿using herental.BL.Interfaces;
+using System.Linq;
 
-namespace herental.BL.Interfaces
+namespace herental.BL.Commands
 {
     public class ListProducts : ICommand
     {
@@ -18,8 +17,12 @@ namespace herental.BL.Interfaces
 
         public void Handle(object[] args)
         {
-            // This would get the list of products and store it in result
-            throw new NotImplementedException();
+            using (var db = new HerentalBL())
+            {
+                // TODO: implement query filters from args
+                var products = db.Products.ToList();
+                result = products;
+            }
         }
     }
 }

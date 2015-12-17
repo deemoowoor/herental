@@ -1,14 +1,14 @@
-﻿using log4net;
+﻿using herental.BL;
+using herental.BL.Interfaces;
+using log4net;
+using Newtonsoft.Json;
 using RabbitMQ.Client;
+using SimpleInjector;
 using System;
 using System.IO;
 using System.ServiceProcess;
 using System.Text;
 using System.Threading;
-using SimpleInjector;
-using herental.BL.Interfaces;
-using Newtonsoft.Json;
-using log4net.Config;
 
 [assembly: log4net.Config.XmlConfigurator(Watch = true)]
 namespace herental.backend
@@ -42,6 +42,12 @@ namespace herental.backend
         protected override void OnStart(string[] args)
         {
             base.OnStart(args);
+
+            using (var db = new HerentalBL())
+            {
+                db.WarmUp();
+            }
+
             MainThread.Start();
         }
 
@@ -54,12 +60,9 @@ namespace herental.backend
 
         protected void MainLoop()
         {
-            // TODO: receive events from the MQ, act upon the messages
-            // TODO: get the hostname from configuration file
             var cf = new ConnectionFactory() { HostName = "localhost" };
             
             // set the heartbeat timeout to 60 seconds
-            // TODO: config
             cf.RequestedHeartbeat = 60;
 
             var dispatcher = container.GetInstance<IDispatcher>();
@@ -105,10 +108,10 @@ namespace herental.backend
                 {
                     var message = Encoding.UTF8.GetString(body);
                     Log.InfoFormat("Recv: '{0}'", message);
-                    var rawcommand = JsonConvert.DeserializeObject<RawCommand>(message);
+                    var rawcommand = JsonConvert.DeserializeObject<ProtocolRequest>(message);
                     var result = dispatcher.Invoke(rawcommand.MethodName, rawcommand.Arguments);
                     Log.InfoFormat("Result: '{0}'", result);
-                    response = JsonConvert.SerializeObject(result); // TODO: wrap into a protocol object
+                    response = JsonConvert.SerializeObject(new ProtocolResponse(result)); // TODO: wrap into a protocol message object
                 }
                 catch (Exception e)
                 {
