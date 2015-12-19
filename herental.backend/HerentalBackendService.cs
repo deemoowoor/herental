@@ -53,8 +53,14 @@ namespace herental.backend
 
         protected override void OnStop()
         {
-            StopRequest.Set();
-            MainThread.Join(3000);
+            try {
+                StopRequest.Set();
+                MainThread.Join(3000);
+            }
+            finally
+            {
+                StopRequest.Dispose();
+            }
             base.OnStop();
         }
 

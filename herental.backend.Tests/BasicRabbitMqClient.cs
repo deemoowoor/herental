@@ -1,4 +1,6 @@
-﻿using RabbitMQ.Client;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using RabbitMQ.Client;
 using System;
 using System.Text;
 
@@ -25,14 +27,14 @@ namespace herental.backend.Tests
             this.timeout = timeout;
         }
 
-        public string Call(string message)
+        public string Call(byte[] message)
         {
             var corrId = Guid.NewGuid().ToString();
             var props = channel.CreateBasicProperties();
             props.ReplyTo = replyQueueName;
             props.CorrelationId = corrId;
 
-            var messageBytes = Encoding.UTF8.GetBytes(message);
+            var messageBytes = message;
             channel.BasicPublish(exchange: "",
                                  routingKey: "rpc_queue",
                                  basicProperties: props,
@@ -44,7 +46,7 @@ namespace herental.backend.Tests
             {
                 if (DateTime.UtcNow > (start + this.timeout))
                 {
-                    throw new System.TimeoutException("Timed out waiting for reply!");
+                    throw new TimeoutException("Timed out waiting for reply!");
                 }
 
                 var ea = consumer.Queue.Dequeue();
@@ -53,6 +55,13 @@ namespace herental.backend.Tests
                     return Encoding.UTF8.GetString(ea.Body);
                 }
             }
+        }
+
+        public object Call(string methodName, object[] args)
+        {
+            var response = Call(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { MethodName = "ListProducts", Arguments = new object[1] })));
+            var result = ((JObject)JsonConvert.DeserializeObject(response))["Result"];
+            return result;
         }
 
         public void Close()

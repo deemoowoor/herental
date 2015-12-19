@@ -1,51 +1,58 @@
 ﻿using herental.BL.Interfaces;
+using System;
 using System.Collections.Generic;
 
 namespace herental.BL
 {
+    /// <summary>
+    /// Dispatches commands by name, creating concrete instances of ICommand interface
+    /// </summary>
     public class Dispatcher : IDispatcher
     {
-        private Dictionary<string, ICommand> registry;
+        private Dictionary<string, Type> registry;
 
         /// <summary>
         /// Register a method handler
         /// </summary>
-        /// <param name="methodName">Method name to use for handler lookup</param>
-        /// <param name="command">Method handler</param>
-        public void RegisterHandler(string methodName, ICommand command)
+        /// <param name="commandName">Name of command to register</param>
+        /// <param name="command">Command type</param>
+        public void RegisterHandler(string commandName, Type command)
         {
-            registry.Add(methodName, command);
+            if (command.GetInterface("ICommand") != null)
+            {
+                registry.Add(commandName, command);
+            }
         }
 
         /// <summary>
         /// Dispatch a method request
         /// </summary>
-        /// <param name="methodName">Method name to look up the handler with</param>
-        /// <returns></returns>
-        public ICommand Dispatch(string methodName)
+        /// <param name="commandName">Method name to look up the handler with</param>
+        /// <returns>Command if found</returns>
+        /// <exception cref="KeyNotFoundException">Raised if command is not found</exception>
+        public ICommand Dispatch(string commandName)
         {
-            return registry[methodName];
+            return (ICommand)Activator.CreateInstance(registry[commandName]);
         }
 
         /// <summary>
         /// Dispatch and invoke the method handler
         /// </summary>
-        /// <param name="methodName"></param>
+        /// <param name="commmandName">Name of command to invoke</param>
         /// <param name="arguments">Method arguments</param>
         /// <returns>Handler's return object</returns>
-        public object Invoke(string methodName, object[] arguments)
+        public object Invoke(string commmandName, object[] arguments)
         {
-            var command = this.Dispatch(methodName);
+            var command = Dispatch(commmandName);
             command.Handle(arguments);
             return command.Result;
-
         }
 
         #region Singleton interface
 
         private Dispatcher()
         {
-            registry = new Dictionary<string, ICommand>();
+            registry = new Dictionary<string, Type>();
         }
 
         private static Dispatcher instance = new Dispatcher();

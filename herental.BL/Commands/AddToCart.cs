@@ -15,8 +15,6 @@ namespace herental.BL.Commands
 
         public void Handle(object[] args)
         {
-            // TODO: Validate arguments
-            //ProductOrder order = new ProductOrder(args[0]);
             // Add product refernce to cart along with quantity
             using(var db = new HerentalBL())
             {
@@ -24,6 +22,15 @@ namespace herental.BL.Commands
                 Cart cart = db.Carts.Create();
                 cart.Id = 1;
                 db.Carts.Attach(cart);
+
+                Product product = new Product() { Id = (int)args[0] };
+                db.Products.Attach(product);
+
+                ProductOrder order = db.ProductOrders.Create();
+                order.Product = product;
+                order.Quantity = (int)args[1];
+
+                cart.ProductOrders.Add(order);
             }
         }
     }

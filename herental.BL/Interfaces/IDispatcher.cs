@@ -1,8 +1,10 @@
-﻿namespace herental.BL.Interfaces
+﻿using System;
+
+namespace herental.BL.Interfaces
 {
     public interface IDispatcher
     {
-        void RegisterHandler(string methodName, ICommand del);
+        void RegisterHandler(string methodName, Type commandClass);
 
         ICommand Dispatch(string methodName);
 

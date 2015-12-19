@@ -1,5 +1,7 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Generic;
 using System.ServiceProcess;
 using Xunit;
 
@@ -7,7 +9,7 @@ namespace herental.backend.Tests
 {
     public class BackendServiceTest
     {
-        private static TimeSpan timeout = TimeSpan.FromMilliseconds(3000);
+        private static TimeSpan timeout = TimeSpan.FromMilliseconds(5000);
         private static ServiceController service = new ServiceController("herental.backend");
 
         public static void ClassInitialize()
@@ -40,17 +42,22 @@ namespace herental.backend.Tests
         {
             ClassInitialize();
             
-            try {
-                var rpcClient = new BasicRabbitMqClient(timeout);
-                var result = rpcClient.Call(JsonConvert.SerializeObject(new { MethodName = "Test", Arguments = new object[1] }));
-                rpcClient.Close();
-                Assert.Equal("ACK", JsonConvert.DeserializeObject(result));
-            }
-            finally
-            {
-                ClassCleanup();
-            }
+            var rpcClient = new BasicRabbitMqClient(timeout);
+            var result = rpcClient.Call("Test", new object[1]);
+            rpcClient.Close();
+            Assert.Equal("ACK", result);
+            
         }
 
+        [Fact]
+        public void TestListProducts()
+        {
+            ClassInitialize();
+
+            var rpcClient = new BasicRabbitMqClient(timeout);
+            var result = rpcClient.Call("ListProducts", new object[1]);
+            rpcClient.Close();
+            Assert.NotEmpty((JArray)result);
+        }
     }
 }
