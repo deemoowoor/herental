@@ -1,6 +1,7 @@
 ﻿using herental.BL;
 using herental.BL.Commands;
 using herental.BL.Interfaces;
+using herental.BL.Services;
 using SimpleInjector;
 
 namespace herental.backend
@@ -9,11 +10,19 @@ namespace herental.backend
     {
         public static Container Setup()
         {
-            Dispatcher.Instance.RegisterHandler("Test", typeof(Test));
-            Dispatcher.Instance.RegisterHandler("ListProducts", typeof(ListProducts));
-
             var container = new Container();
-            container.RegisterSingleton<IDispatcher>(Dispatcher.Instance);
+            container.RegisterSingleton<IDispatcher>(new Dispatcher(container)
+                {
+                    { "Test", typeof(Test) },
+                    { "ListProducts", typeof(ListProducts) },
+                    { "AddToCart", typeof(AddToCart) },
+                    { "ListCart", typeof(ListCart) },
+                    { "DeleteFromCart", typeof(DeleteFromCart) },
+                    { "UpdateCart", typeof(UpdateCart) }
+                }
+            );
+            
+            container.RegisterSingleton<IPriceFormulaManager>(new PriceFormulaManager());
 
             container.Verify();
 

@@ -20,8 +20,7 @@ namespace herental.BL
             {
                 db.ProductTypes.ToList();
                 db.Products.ToList();
-                db.ProductOrders.ToList();
-                db.Carts.ToList();
+                db.OrderedProducts.ToList();
             }
         }
 
@@ -29,7 +28,7 @@ namespace herental.BL
         {
             using (var db = new HerentalBL())
             {
-                if (db.Carts.ToList().Count != 0)
+                if (db.ProductTypes.ToList().Count != 0)
                 {
                     return;
                 }
@@ -56,8 +55,6 @@ namespace herental.BL
                 
                 db.Products.AddRange(products);
                 db.SaveChanges();
-
-                db.Carts.Add(db.Carts.Create());
             }
         }
 
@@ -65,8 +62,7 @@ namespace herental.BL
 
         // virtual to allow mocking in tests
         public virtual DbSet<Product> Products { get; set; }
-        public virtual DbSet<ProductOrder> ProductOrders { get; set; }
+        public virtual DbSet<ProductOrderItem> OrderedProducts { get; set; }
         public virtual DbSet<ProductType> ProductTypes { get; set; }
-        public virtual DbSet<Cart> Carts { get; set; }
     }
 }

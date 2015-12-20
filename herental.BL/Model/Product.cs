@@ -16,6 +16,6 @@ namespace herental.BL.Model
             return 0.0M;
         }
 
-        public IList<ProductOrder> ProductOrders { get; set; }
+        public IList<ProductOrderItem> ProductOrders { get; set; }
     }
 }

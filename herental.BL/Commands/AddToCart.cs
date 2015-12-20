@@ -1,5 +1,6 @@
 ﻿using herental.BL.Interfaces;
-using herental.BL.Model;
+using log4net;
+using System;
 
 namespace herental.BL.Commands
 {
@@ -13,24 +14,27 @@ namespace herental.BL.Commands
             }
         }
 
+        private readonly ILog Log = LogManager.GetLogger(typeof(AddToCart));
+        private readonly IPriceFormulaManager handler;
+        
+        public AddToCart(IPriceFormulaManager mgr)
+        {
+            handler = mgr;
+        }
+
         public void Handle(object[] args)
         {
-            // Add product refernce to cart along with quantity
             using(var db = new HerentalBL())
             {
-                // Using a single cart
-                Cart cart = db.Carts.Create();
-                cart.Id = 1;
-                db.Carts.Attach(cart);
+                var product = db.Products.Find(Convert.ToInt32(args[0]));
 
-                Product product = new Product() { Id = (int)args[0] };
-                db.Products.Attach(product);
-
-                ProductOrder order = db.ProductOrders.Create();
+                var order = db.OrderedProducts.Create();
                 order.Product = product;
-                order.Quantity = (int)args[1];
-
-                cart.ProductOrders.Add(order);
+                order.Period = Convert.ToInt32(args[1]);
+                order.UpdatePriceQuote(db, handler);
+                db.OrderedProducts.Add(order);
+                
+                db.SaveChanges();
             }
         }
     }

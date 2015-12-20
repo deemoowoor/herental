@@ -42,6 +42,10 @@
       <HintPath>..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.SqlServer.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="log4net, Version=1.2.15.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
+      <HintPath>..\packages\log4net.2.0.5\lib\net45-full\log4net.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Core" />
@@ -54,22 +58,25 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Commands\AddToCart.cs" />
+    <Compile Include="Commands\DeleteFromCart.cs" />
+    <Compile Include="Commands\ListCart.cs" />
     <Compile Include="Commands\Test.cs" />
     <Compile Include="Commands\TestResult.cs" />
+    <Compile Include="Commands\UpdateCart.cs" />
     <Compile Include="HerentalBL.cs" />
     <Compile Include="Interfaces\ICommandResult.cs" />
     <Compile Include="Commands\ListProductsArgument.cs" />
-    <Compile Include="Model\Cart.cs" />
     <Compile Include="Model\Product.cs" />
-    <Compile Include="Model\ProductOrder.cs" />
+    <Compile Include="Model\ProductOrderItem.cs" />
     <Compile Include="Model\ProductType.cs" />
-    <Compile Include="Dispatcher.cs" />
     <Compile Include="Interfaces\ICommand.cs" />
     <Compile Include="Interfaces\ICommandArgument.cs" />
     <Compile Include="Interfaces\IDispatcher.cs" />
     <Compile Include="Commands\ListProducts.cs" />
     <Compile Include="Interfaces\IPagingInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Interfaces\IPriceFormulaManager.cs" />
+    <Compile Include="Services\PriceFormulaManager.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

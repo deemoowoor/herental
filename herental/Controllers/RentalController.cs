@@ -2,6 +2,7 @@
 using herental.Models;
 using System.Web.Mvc;
 using System.Collections.Generic;
+using System;
 
 namespace herental.Controllers
 {
@@ -17,8 +18,9 @@ namespace herental.Controllers
         // GET: Rental
         public ActionResult Index()
         {
-            var products = _client.Call<List<ProductViewModel>>("ListProducts", null);
+            var products = _client.Call<List<Product>>("ListProducts", null);
             return View(products);
         }
+
     }
 }

@@ -1,28 +1,40 @@
 ﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
 
 namespace herental.Models
 {
-    public class ProductListViewModel
+    public class Product
     {
-        public IList<ProductViewModel> Products { get; set; }
-    }
-
-    public class ProductViewModel
-    {
-        //[JsonConverter(typeof(Int32))]
-        [JsonProperty(PropertyName = "Id")]
+        [JsonProperty()]
         public int Id { get; set; }
 
-        [JsonProperty(PropertyName = "Name")]
+        [JsonProperty()]
         public string Name { get; set; }
+        
+        [JsonProperty()]
+        public ProductType Type { get; set; }
+    }
 
-        //[JsonConverter(typeof(Int32))]
-        [JsonProperty(PropertyName = "ProductTypeId")]
-        public int ProductTypeId { get; set; }
+    public class ProductType
+    {
+        [JsonProperty()]
+        public int Id { get; set; }
 
-        [JsonProperty(PropertyName = "Type")]
-        public string ProductTypeName { get; set; }
+        [JsonProperty()]
+        public string Name { get; set; }
+    }
+
+    public class ProductOrder
+    {
+        [JsonProperty()]
+        public int Id { get; set; }
+
+        [JsonProperty()]
+        public Product Product { get; set; }
+
+        [JsonProperty()]
+        public int Period { get; set; }
+
+        [JsonProperty()]
+        public decimal PriceQuote { get; set; }
     }
 }

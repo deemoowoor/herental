@@ -14,6 +14,5 @@ namespace herental.BL.Model
         {
             throw new NotImplementedException();
         }
-
     }
 }

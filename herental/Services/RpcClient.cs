@@ -22,11 +22,18 @@ namespace herental.Services
         [JsonObject()]
         public class ResponseMessage<TObject>
         {
+            public const string OK = "OK";
+            public const string ERR = "ERR";
+
             [JsonProperty(PropertyName = "Status")]
             public string Status { get; set; }
 
             [JsonProperty(PropertyName = "Result")]
             public TObject Result { get; set; }
+
+            // Reserved for error messages
+            [JsonProperty(PropertyName = "Message")]
+            public string Message { get; set; }
         }
 
         public TimeSpan Timeout { get; set; }
@@ -81,27 +88,26 @@ namespace herental.Services
             }
         }
 
+        /// <summary>
+        /// Perform a synchronous "RPC" call
+        /// </summary>
+        /// <typeparam name="TObject"></typeparam>
+        /// <param name="methodName"></param>
+        /// <param name="args"></param>
+        /// <exception cref="RemoteError">Thrown when backend server responds with an error</exception>
+        /// <returns></returns>
         public virtual TObject Call<TObject>(string methodName, object[] args)
         {
             var reqMessage = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(
-                new RequestMessage { MethodName = methodName, Arguments = args }));
+                new RequestMessage() { MethodName = methodName, Arguments = args }));
             var corrId = SendMessage(reqMessage);
             var response = Encoding.UTF8.GetString(WaitForResponse(corrId));
-
-            JsonSerializerSettings settings = new JsonSerializerSettings();
-            /*
-            // TODO: find a better place for this
-            List<string> errorList = new List<string>();
-            settings.Error += delegate (object sender, Newtonsoft.Json.Serialization.ErrorEventArgs eargs) {
-                errorList.Add(eargs.ErrorContext.Error.Message);
-            };
-
-            if (errorList.Count > 0)
-            {
-                throw new Exception(String.Join("\n", errorList));
-            }
-            */
             var result = JsonConvert.DeserializeObject<ResponseMessage<TObject>>(response);
+            if (result.Status == ResponseMessage<TObject>.ERR)
+            {
+                throw new RemoteError(result.Message);
+            }
+
             return result.Result;
         }
         
@@ -109,5 +115,10 @@ namespace herental.Services
         {
             connection.Close();
         }
+    }
+
+    public class RemoteError : Exception
+    {
+        public RemoteError(string message) : base(message) { }
     }
 }

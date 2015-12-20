@@ -1,16 +1,22 @@
 ﻿using herental.BL.Interfaces;
 using System;
 using System.Collections.Generic;
+using SimpleInjector;
 
 namespace herental.BL
 {
     /// <summary>
     /// Dispatches commands by name
     /// </summary>
-    public class Dispatcher : IDispatcher
+    public class Dispatcher : Dictionary<string, Type>, IDispatcher
     {
-        private Dictionary<string, Type> registry;
+        private readonly Container container;
 
+        public Dispatcher(Container container)
+        {
+            this.container = container;
+        }
+        
         /// <summary>
         /// Register a method handler
         /// </summary>
@@ -20,7 +26,11 @@ namespace herental.BL
         {
             if (command.GetInterface(typeof(ICommand).Name) != null)
             {
-                registry.Add(commandName, command);
+                Add(commandName, command);
+            }
+            else
+            {
+                throw new InvalidOperationException("Invalid command class. Must have ICommand interface!");
             }
         }
 
@@ -32,7 +42,13 @@ namespace herental.BL
         /// <exception cref="KeyNotFoundException">Raised if command is not found</exception>
         public ICommand Dispatch(string commandName)
         {
-            return (ICommand)Activator.CreateInstance(registry[commandName]);
+            try {
+                return (ICommand)container.GetInstance(this[commandName]);
+            }
+            catch (KeyNotFoundException)
+            {
+                throw new KeyNotFoundException("Herental backend: Unknown method name");
+            }
         }
 
         /// <summary>
@@ -48,23 +64,5 @@ namespace herental.BL
             return command.Result;
         }
 
-        #region Singleton interface
-
-        private Dispatcher()
-        {
-            registry = new Dictionary<string, Type>();
-        }
-
-        private static Dispatcher instance = new Dispatcher();
-
-        public static Dispatcher Instance
-        {
-            get
-            {
-                return instance;
-            }
-        }
-
-        #endregion
     }
 }

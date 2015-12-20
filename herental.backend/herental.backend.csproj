@@ -88,6 +88,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DependencyInjectorSetup.cs" />
+    <Compile Include="Dispatcher.cs" />
     <Compile Include="HerentalBackendService.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -139,7 +140,6 @@ EXIT 0</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
     <PreBuildEvent>net stop $(TargetPath) 2&gt;nul 1&gt;nul
-SET ERRORLEVEL = 0
 C:\Windows\Microsoft.NET\Framework\v4.0.30319\installutil -u $(TargetPath)
 EXIT 0</PreBuildEvent>
   </PropertyGroup>

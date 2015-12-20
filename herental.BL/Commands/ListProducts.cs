@@ -20,8 +20,7 @@ namespace herental.BL.Commands
             using (var db = new HerentalBL())
             {
                 // TODO: implement query filters from args
-                var products = db.Products.ToList();
-                result = products;
+                result = db.Products.ToList();
             }
         }
     }
