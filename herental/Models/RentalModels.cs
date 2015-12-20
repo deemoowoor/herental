@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
 
 namespace herental.Models
 {
@@ -9,9 +11,18 @@ namespace herental.Models
 
     public class ProductViewModel
     {
+        //[JsonConverter(typeof(Int32))]
+        [JsonProperty(PropertyName = "Id")]
         public int Id { get; set; }
+
+        [JsonProperty(PropertyName = "Name")]
         public string Name { get; set; }
+
+        //[JsonConverter(typeof(Int32))]
+        [JsonProperty(PropertyName = "ProductTypeId")]
         public int ProductTypeId { get; set; }
+
+        [JsonProperty(PropertyName = "Type")]
         public string ProductTypeName { get; set; }
     }
 }

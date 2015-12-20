@@ -113,13 +113,13 @@ namespace herental.backend
                     Log.InfoFormat("recv: '{0}'", message);
                     var rawcommand = JsonConvert.DeserializeObject<ProtocolRequest>(message);
                     var result = dispatcher.Invoke(rawcommand.MethodName, rawcommand.Arguments);
-                    response = JsonConvert.SerializeObject(new ProtocolResponse(result)); // TODO: wrap into a protocol message object
+                    response = JsonConvert.SerializeObject(new ProtocolResponse("OK", result)); // TODO: wrap into a protocol message object
                     Log.InfoFormat("send: '{0}'", response);
                 }
                 catch (Exception e)
                 {
                     Log.Error(e.Message);
-                    response = JsonConvert.SerializeObject(new { Error = e.Message}); // TODO: report an error
+                    response = JsonConvert.SerializeObject(new ProtocolResponse("ERR", e.Message)); // TODO: report an error
                 }
                 finally
                 {

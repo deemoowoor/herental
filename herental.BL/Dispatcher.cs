@@ -5,7 +5,7 @@ using System.Collections.Generic;
 namespace herental.BL
 {
     /// <summary>
-    /// Dispatches commands by name, creating concrete instances of ICommand interface
+    /// Dispatches commands by name
     /// </summary>
     public class Dispatcher : IDispatcher
     {
@@ -18,7 +18,7 @@ namespace herental.BL
         /// <param name="command">Command type</param>
         public void RegisterHandler(string commandName, Type command)
         {
-            if (command.GetInterface("ICommand") != null)
+            if (command.GetInterface(typeof(ICommand).Name) != null)
             {
                 registry.Add(commandName, command);
             }

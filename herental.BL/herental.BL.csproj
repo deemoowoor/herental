@@ -53,7 +53,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CommandFactory.cs" />
     <Compile Include="Commands\AddToCart.cs" />
     <Compile Include="Commands\Test.cs" />
     <Compile Include="Commands\TestResult.cs" />

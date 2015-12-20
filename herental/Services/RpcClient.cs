@@ -1,6 +1,5 @@
 ﻿using herental.Interfaces;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using RabbitMQ.Client;
 using System;
 using System.Text;
@@ -13,6 +12,22 @@ namespace herental.Services
         private IModel channel;
         private string replyQueueName;
         private QueueingBasicConsumer consumer;
+
+        public class RequestMessage
+        {
+            public string MethodName { get; set; }
+            public object[] Arguments { get; set; }
+        }
+
+        [JsonObject()]
+        public class ResponseMessage<TObject>
+        {
+            [JsonProperty(PropertyName = "Status")]
+            public string Status { get; set; }
+
+            [JsonProperty(PropertyName = "Result")]
+            public TObject Result { get; set; }
+        }
 
         public TimeSpan Timeout { get; set; }
 
@@ -30,7 +45,7 @@ namespace herental.Services
             Timeout = TimeSpan.FromSeconds(3);
         }
 
-        public Guid SendMessage(byte[] message)
+        public virtual Guid SendMessage(byte[] message)
         {
             var corrId = Guid.NewGuid();
             var props = channel.CreateBasicProperties();
@@ -45,7 +60,7 @@ namespace herental.Services
             return corrId;
         }
 
-        public byte[] WaitForResponse(Guid corrId)
+        public virtual byte[] WaitForResponse(Guid corrId)
         {
             DateTime start = DateTime.UtcNow;
 
@@ -57,6 +72,7 @@ namespace herental.Services
                 }
 
                 var ea = consumer.Queue.Dequeue();
+
                 // XXX: will discard all messages that do not match corrId
                 if (ea.BasicProperties.CorrelationId == corrId.ToString())
                 {
@@ -65,17 +81,31 @@ namespace herental.Services
             }
         }
 
-        public object Call(string methodName, object[] args)
+        public virtual TObject Call<TObject>(string methodName, object[] args)
         {
             var reqMessage = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(
-                new { MethodName = methodName, Arguments = args }));
+                new RequestMessage { MethodName = methodName, Arguments = args }));
             var corrId = SendMessage(reqMessage);
             var response = Encoding.UTF8.GetString(WaitForResponse(corrId));
-            var result = ((JObject)JsonConvert.DeserializeObject(response))["Result"];
-            return result;
-        }
 
-        public void Close()
+            JsonSerializerSettings settings = new JsonSerializerSettings();
+            /*
+            // TODO: find a better place for this
+            List<string> errorList = new List<string>();
+            settings.Error += delegate (object sender, Newtonsoft.Json.Serialization.ErrorEventArgs eargs) {
+                errorList.Add(eargs.ErrorContext.Error.Message);
+            };
+
+            if (errorList.Count > 0)
+            {
+                throw new Exception(String.Join("\n", errorList));
+            }
+            */
+            var result = JsonConvert.DeserializeObject<ResponseMessage<TObject>>(response);
+            return result.Result;
+        }
+        
+        public virtual void Close()
         {
             connection.Close();
         }
