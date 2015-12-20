@@ -1,7 +1,5 @@
-﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 using System;
-using System.Collections.Generic;
 using System.ServiceProcess;
 using Xunit;
 
@@ -15,8 +13,6 @@ namespace herental.backend.Tests
         public static void ClassInitialize()
         {
             // XXX: service must be installed prior to running this test!
-            ServiceController service = new ServiceController("herental.backend");
-            
             if (ServiceControllerStatus.Stopped == service.Status)
             {
                 service.Start();
@@ -45,8 +41,7 @@ namespace herental.backend.Tests
             var rpcClient = new BasicRabbitMqClient(timeout);
             var result = rpcClient.Call("Test", new object[1]);
             rpcClient.Close();
-            Assert.Equal("ACK", result);
-            
+            Assert.Equal("ACK", result.ToString());
         }
 
         [Fact]

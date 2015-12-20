@@ -12,17 +12,28 @@ namespace herental.BL
             Database.SetInitializer(new DropCreateDatabaseIfModelChanges<HerentalBL>());
         }
 
-        public void WarmUp()
+        #region static utilities
+
+        public static void WarmUp()
         {
-            Products.ToList();
-            ProductOrders.ToList();
-            Carts.ToList();
+            using (var db = new HerentalBL())
+            {
+                db.ProductTypes.ToList();
+                db.Products.ToList();
+                db.ProductOrders.ToList();
+                db.Carts.ToList();
+            }
         }
 
         public static void SeedWithTestData()
         {
             using (var db = new HerentalBL())
             {
+                if (db.Carts.ToList().Count != 0)
+                {
+                    return;
+                }
+
                 List<ProductType> productTypes = new List<ProductType>()
                 {
                     new ProductType() { Name = "Heavy" },
@@ -49,6 +60,8 @@ namespace herental.BL
                 db.Carts.Add(db.Carts.Create());
             }
         }
+
+        #endregion
 
         // virtual to allow mocking in tests
         public virtual DbSet<Product> Products { get; set; }

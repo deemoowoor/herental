@@ -12,7 +12,8 @@ namespace herental.backend.Tests
         private IModel channel;
         private string replyQueueName;
         private QueueingBasicConsumer consumer;
-        private TimeSpan timeout;
+
+        public TimeSpan Timeout { get; set; }
 
         public BasicRabbitMqClient(TimeSpan timeout)
         {
@@ -24,42 +25,50 @@ namespace herental.backend.Tests
             channel.BasicConsume(queue: replyQueueName,
                 noAck: true,
                 consumer: consumer);
-            this.timeout = timeout;
+            Timeout = timeout;
         }
 
-        public string Call(byte[] message)
+        public Guid SendMessage(byte[] message)
         {
-            var corrId = Guid.NewGuid().ToString();
+            var corrId = Guid.NewGuid();
             var props = channel.CreateBasicProperties();
             props.ReplyTo = replyQueueName;
-            props.CorrelationId = corrId;
+            props.CorrelationId = corrId.ToString();
 
             var messageBytes = message;
             channel.BasicPublish(exchange: "",
                                  routingKey: "rpc_queue",
                                  basicProperties: props,
                                  body: messageBytes);
+            return corrId;
+        }
 
+        public byte[] WaitForResponse(Guid corrId)
+        {
             DateTime start = DateTime.UtcNow;
 
             while (true)
             {
-                if (DateTime.UtcNow > (start + this.timeout))
+                if (DateTime.UtcNow > (start + Timeout))
                 {
                     throw new TimeoutException("Timed out waiting for reply!");
                 }
 
                 var ea = consumer.Queue.Dequeue();
-                if (ea.BasicProperties.CorrelationId == corrId)
+                // XXX: will discard all messages that do not match corrId
+                if (ea.BasicProperties.CorrelationId == corrId.ToString()) 
                 {
-                    return Encoding.UTF8.GetString(ea.Body);
+                    return ea.Body;
                 }
             }
         }
 
         public object Call(string methodName, object[] args)
         {
-            var response = Call(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { MethodName = "ListProducts", Arguments = new object[1] })));
+            var reqMessage = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(
+                new { MethodName = methodName, Arguments = args }));
+            var corrId = SendMessage(reqMessage);
+            var response = Encoding.UTF8.GetString(WaitForResponse(corrId));
             var result = ((JObject)JsonConvert.DeserializeObject(response))["Result"];
             return result;
         }

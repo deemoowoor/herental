@@ -43,11 +43,8 @@ namespace herental.backend
         {
             base.OnStart(args);
 
-            using (var db = new HerentalBL())
-            {
-                db.WarmUp();
-            }
-
+            HerentalBL.WarmUp();
+            HerentalBL.SeedWithTestData();
             MainThread.Start();
         }
 
@@ -113,11 +110,11 @@ namespace herental.backend
                 try
                 {
                     var message = Encoding.UTF8.GetString(body);
-                    Log.InfoFormat("Recv: '{0}'", message);
+                    Log.InfoFormat("recv: '{0}'", message);
                     var rawcommand = JsonConvert.DeserializeObject<ProtocolRequest>(message);
                     var result = dispatcher.Invoke(rawcommand.MethodName, rawcommand.Arguments);
-                    Log.InfoFormat("Result: '{0}'", result);
                     response = JsonConvert.SerializeObject(new ProtocolResponse(result)); // TODO: wrap into a protocol message object
+                    Log.InfoFormat("send: '{0}'", response);
                 }
                 catch (Exception e)
                 {

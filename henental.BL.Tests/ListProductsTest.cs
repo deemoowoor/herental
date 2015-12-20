@@ -20,9 +20,9 @@ namespace henental.BL.Tests
             mockContext.Setup(m => m.Products).Returns(mockProducts.Object);
 
             var command = new ListProducts();
-
             command.Handle(null);
             Assert.NotNull(command.Result);
+            Assert.IsType(typeof(List<Product>), command.Result);
         }
     }
 }
