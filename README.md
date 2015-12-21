@@ -1,5 +1,5 @@
 # herental
-A study sandbox project
+A study sandbox project for a fictional heavy equipment rental company "Herental". Uses a two-tiered architecture with a RabbitMQ-connected standalone backend server and a web front end. Dependency injection for some IoC goodness.
 
 # Prerequisites
 
